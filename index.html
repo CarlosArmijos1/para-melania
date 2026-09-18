@@ -33,10 +33,12 @@
   }
 
   * { box-sizing: border-box; }
-  html { height: 100%; }
+  html { height: 100%; overscroll-behavior: none; }
   body {
     margin: 0;
     min-height: 100%;
+    overscroll-behavior: none;
+    touch-action: manipulation;
     background: var(--table);
     background-image:
       radial-gradient(60% 45% at 50% 30%, rgba(255, 214, 180, .13), transparent 70%),
@@ -100,6 +102,7 @@
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
+    touch-action: none;
   }
   .notebook.is-happy { animation: wiggle .9s ease; }
   @keyframes wiggle {
@@ -137,19 +140,21 @@
     transform-origin: 50% 0;
     transform-style: preserve-3d;
     -webkit-transform-style: preserve-3d;
-    transition: transform .95s cubic-bezier(.45, .05, .2, 1), opacity .2s ease 0s;
+    transition: transform .95s cubic-bezier(.45, .05, .2, 1);
   }
+  .sheet .face { transition: opacity .2s ease 0s; }
   .sheet.is-turned {
     transform: rotateX(180deg);
-    opacity: 0;
     pointer-events: none;
-    transition: transform .95s cubic-bezier(.45, .05, .2, 1), opacity .25s ease .68s;
   }
-  .stack.no-anim .sheet { transition: none !important; }
+  .sheet.is-turned .face { opacity: 0; transition: opacity .25s ease .68s; }
+  /* solo existen las hojas cercanas a la actual: en el celular 130 hojas en 3D revientan la GPU */
+  .sheet.is-far { display: none; }
+  .stack.no-anim .sheet, .stack.no-anim .face { transition: none !important; }
 
   /* modo flipbook: las hojas pasan rapidísimo */
-  .stack.is-flicking .sheet,
-  .stack.is-flicking .sheet.is-turned { transition: transform .14s linear, opacity .06s linear .09s; }
+  .stack.is-flicking .sheet { transition: transform .14s linear; }
+  .stack.is-flicking .face { transition: opacity .06s linear .09s; }
   .stack.is-flicking .is-current .front::before { animation-duration: .14s; }
   .stack.is-flicking .front::after { transition-duration: .1s; }
 
@@ -213,6 +218,7 @@
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
+  .front { transform: translateZ(0); }
   .back { transform: rotateX(180deg); }
 
   /* sombra que se levanta con la hoja */
@@ -617,11 +623,14 @@
     border: 0;
     padding: .3rem .5rem;
     cursor: pointer;
+    white-space: nowrap;
     transition: color .2s ease, visibility 0s;
   }
   .navbtn:hover { color: var(--paper); }
   .navbtn.is-off { visibility: hidden; }
   .nav .hint {
+    flex: 1;
+    min-width: 0;
     font-size: 1.05rem;
     color: rgba(251, 247, 238, .45);
     text-align: center;
@@ -640,6 +649,11 @@
   button:focus-visible {
     outline: 2px solid var(--rose);
     outline-offset: 4px;
+  }
+
+  /* en pantallas angostas la hoja al levantarse se salía de la pantalla por los lados */
+  @media (max-width: 36rem) {
+    .stack, .lid-wrap { perspective: 7000px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1127,6 +1141,7 @@
       var turned = i < idx;
       s.classList.toggle('is-turned', turned);
       s.classList.toggle('is-current', i === idx);
+      s.classList.toggle('is-far', i < idx - 3 || i > idx + 3);
       s.style.zIndex = turned ? (N + 1 + i) : (N - i);
     });
     prevBtn.classList.toggle('is-off', idx === 0 || idx > qIndex);
@@ -1215,6 +1230,7 @@
     var t = e.changedTouches[0];
     touch = { x: t.clientX, y: t.clientY };
   }, { passive: true });
+  notebook.addEventListener('touchcancel', function () { touch = null; }, { passive: true });
   notebook.addEventListener('touchend', function (e) {
     if (!touch) return;
     var t = e.changedTouches[0];
