@@ -1,0 +1,1562 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Para Melania</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Special+Elite&display=swap">
+<style>
+  :root {
+    --table: #2E2226;
+    --paper: #FBF7EE;
+    --paper-edge: #EAE1CF;
+    --rule-line: #BFD2E4;
+    --margin-line: #E8A4A9;
+    --ink: #27469A;
+    --rose: #C9405F;
+    --pencil: #7B7468;
+    --kraft: #B5895F;
+    --kraft-dark: #8C6744;
+    --ring: #BFC3CA;
+    --hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+    --type: 'Special Elite', 'Courier New', monospace;
+    --w: min(26rem, 100vw - 2rem);
+    --rule: 32px;
+    --margin: 2.6rem;
+    --top: 3.4rem;
+    color-scheme: dark;
+  }
+  @supports (height: 100svh) {
+    :root { --w: min(26rem, 100vw - 2rem, (100svh - 9rem) * 0.77); }
+  }
+
+  * { box-sizing: border-box; }
+  html { height: 100%; }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--table);
+    background-image:
+      radial-gradient(60% 45% at 50% 30%, rgba(255, 214, 180, .13), transparent 70%),
+      radial-gradient(120% 90% at 50% 100%, rgba(0, 0, 0, .35), transparent 60%);
+    color: var(--paper);
+    font-family: var(--hand);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 2.5s ease;
+  }
+  ::selection { background: rgba(201, 64, 95, .3); }
+
+  #petals {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  /* ---- Luz de la mesa (lluvia / después del sí) ---- */
+  #dim, #glow {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.8s ease;
+  }
+  #dim {
+    z-index: 4;
+    background: radial-gradient(90% 70% at 50% 40%, rgba(10, 8, 18, .35), rgba(5, 4, 12, .78));
+  }
+  #glow {
+    z-index: 0;
+    background:
+      radial-gradient(70% 55% at 50% 35%, rgba(255, 150, 178, .30), transparent 70%),
+      radial-gradient(100% 60% at 50% 100%, rgba(255, 196, 150, .16), transparent 60%);
+  }
+  body.is-rain #dim { opacity: 1; }
+  body.is-yes { background-color: #4A2837; }
+  body.is-yes #glow { opacity: 1; }
+
+  .stage {
+    position: relative;
+    z-index: 1;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.1rem;
+    padding-inline: 1rem;
+    padding-block: 2.5rem 2rem;
+  }
+
+  /* ---- El cuaderno ---- */
+  .notebook {
+    position: relative;
+    width: var(--w);
+    aspect-ratio: 4 / 5.2;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .notebook.is-happy { animation: wiggle .9s ease; }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(-1.6deg) scale(1.01); }
+    45% { transform: rotate(1.4deg); }
+    70% { transform: rotate(-.7deg); }
+  }
+  .notebook::before {
+    content: "";
+    position: absolute;
+    inset: 4% 2% -1%;
+    border-radius: 12px;
+    box-shadow: 0 26px 50px rgba(0, 0, 0, .55), 0 6px 14px rgba(0, 0, 0, .35);
+    z-index: 0;
+  }
+  .notebook::after {
+    content: "";
+    position: absolute;
+    inset: 1px -3px -4px;
+    border-radius: 4px 4px 11px 11px;
+    background: var(--paper-edge);
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .08);
+    z-index: 0;
+  }
+  .stack {
+    position: absolute;
+    inset: 0;
+    perspective: 1900px;
+    z-index: 1;
+  }
+  .sheet {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 0;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transition: transform .95s cubic-bezier(.45, .05, .2, 1), opacity .2s ease 0s;
+  }
+  .sheet.is-turned {
+    transform: rotateX(180deg);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .95s cubic-bezier(.45, .05, .2, 1), opacity .25s ease .68s;
+  }
+  .stack.no-anim .sheet { transition: none !important; }
+
+  /* modo flipbook: las hojas pasan rapidísimo */
+  .stack.is-flicking .sheet,
+  .stack.is-flicking .sheet.is-turned { transition: transform .14s linear, opacity .06s linear .09s; }
+  .stack.is-flicking .is-current .front::before { animation-duration: .14s; }
+  .stack.is-flicking .front::after { transition-duration: .1s; }
+
+  .frame-art {
+    position: absolute;
+    left: calc(var(--margin) + .3rem);
+    right: .9rem;
+    top: var(--top);
+    bottom: 2.2rem;
+  }
+  .frame-art svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .frame-art path, .frame-art circle, .frame-art ellipse, .frame-art rect, .frame-art line {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .frame-art .rose { stroke: var(--rose); }
+  .frame-art .rose-fill { fill: var(--rose); fill-opacity: .9; }
+  .frame-art .petal { fill: var(--rose); fill-opacity: .28; }
+  .frame-art .thin { stroke-width: 1.2; }
+  .frame-art .gold { fill: #D8B36A; stroke: #C39A47; }
+  .frame-art .dot { fill: var(--ink); stroke: none; }
+  .frame-art .pencil { opacity: .55; }
+  .frame-art .pencil > * { stroke: var(--pencil); stroke-width: 1.5; }
+  .frame-art text { font-family: var(--hand); font-weight: 700; fill: var(--ink); stroke: none; }
+  .frame-art text.note { font-size: 12px; font-weight: 400; fill: var(--pencil); }
+  .frame-art text.onheart { fill: var(--paper); }
+  .fnum {
+    position: absolute;
+    right: .9rem;
+    bottom: .7rem;
+    font-size: .95rem;
+    line-height: 1;
+    color: var(--pencil);
+  }
+  .replay {
+    position: absolute;
+    left: 1rem;
+    bottom: .55rem;
+    font-family: var(--hand);
+    font-size: 1rem;
+    color: var(--pencil);
+    background: none;
+    border: 0;
+    padding: .2rem .3rem;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: .2em;
+    opacity: .75;
+  }
+  .replay:hover { opacity: 1; }
+  .nav.is-busy .navbtn { visibility: hidden; }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    border-radius: 4px 4px 10px 10px;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .back { transform: rotateX(180deg); }
+
+  /* sombra que se levanta con la hoja */
+  .front::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(50, 30, 20, .28), transparent 55%);
+    opacity: 0;
+    transition: opacity .5s ease;
+    pointer-events: none;
+  }
+  .is-turned .front::after { opacity: 1; }
+  /* sombra que se va de la hoja que queda al descubierto */
+  .front::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(50, 30, 20, .35), transparent 45%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .is-current .front::before { animation: unshade .95s ease-out both; }
+  @keyframes unshade { from { opacity: 1; } to { opacity: 0; } }
+
+  /* ---- Papel ---- */
+  .paper {
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(90deg, transparent var(--margin), var(--margin-line) var(--margin), var(--margin-line) calc(var(--margin) + 1.5px), transparent calc(var(--margin) + 1.5px)),
+      repeating-linear-gradient(180deg, transparent 0 calc(var(--rule) - 1px), var(--rule-line) calc(var(--rule) - 1px) var(--rule));
+    background-repeat: no-repeat, no-repeat;
+    background-size: 100% 100%, 100% calc(100% - var(--top));
+    background-position: 0 0, 0 var(--top);
+    color: var(--ink);
+  }
+  .holes, .rings {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+  .holes { top: 7px; height: 12px; }
+  .holes span {
+    width: 8px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(40, 25, 20, .32);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .35);
+  }
+  .rings { top: -13px; height: 36px; z-index: 50; }
+  .rings span {
+    width: 10px;
+    height: 36px;
+    border: 3px solid var(--ring);
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45), 0 1px 3px rgba(0, 0, 0, .45);
+    background: linear-gradient(180deg, rgba(255, 255, 255, .15), rgba(0, 0, 0, .12));
+  }
+
+  .corner {
+    position: absolute;
+    top: 1.35rem;
+    right: 1.2rem;
+    font-size: 1.05rem;
+    line-height: 1;
+    color: var(--pencil);
+    transform: rotate(-1.5deg);
+  }
+  .pnum {
+    position: absolute;
+    bottom: .7rem;
+    left: 1rem;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--pencil);
+  }
+  .body {
+    position: absolute;
+    left: calc(var(--margin) + .7rem);
+    right: 1.2rem;
+    top: var(--top);
+    bottom: 2.2rem;
+    font-size: 1.72rem;
+    font-weight: 600;
+    line-height: var(--rule);
+    letter-spacing: .005em;
+    overflow: hidden;
+  }
+  .body p, .body ul { margin: 0; }
+  .body p + p, .body ul + p, .body p + ul { margin-top: var(--rule); }
+  .body .tight { margin-top: 0; }
+  .body ul { list-style: none; padding: 0; }
+  .body li { display: flex; align-items: flex-start; gap: .45rem; }
+  .body li .check { flex: none; width: 1.35rem; height: 1.35rem; margin-top: .3rem; }
+  .body .big { font-size: 2.35rem; line-height: calc(var(--rule) * 1.5); font-weight: 700; }
+  .body .rose { color: var(--rose); }
+  .body em, .body .em {
+    font-style: normal;
+    color: var(--rose);
+    text-decoration: underline wavy var(--rose);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: .16em;
+  }
+  .body .note { font-size: 1.3rem; font-weight: 400; color: var(--pencil); }
+
+  .doodle {
+    position: absolute;
+    right: 1.5rem;
+    bottom: 1.3rem;
+    width: 58px;
+    height: 58px;
+    color: var(--ink);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transform: rotate(-8deg);
+    pointer-events: none;
+  }
+  .doodle--rose { color: var(--rose); }
+  .doodle--wide { width: 96px; height: 60px; }
+  .doodle--mc { width: 78px; height: 72px; right: 1.2rem; bottom: 1.6rem; }
+  .doodle--mc text { fill: currentColor; stroke: none; font-family: var(--hand); font-weight: 700; }
+  .check {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ---- Portada ---- */
+  .cover {
+    background-color: var(--kraft);
+    background-image:
+      repeating-linear-gradient(115deg, rgba(255, 255, 255, .05) 0 2px, transparent 2px 6px),
+      repeating-linear-gradient(25deg, rgba(0, 0, 0, .05) 0 1px, transparent 1px 7px),
+      radial-gradient(80% 60% at 50% 30%, rgba(255, 255, 255, .12), transparent 70%);
+    color: var(--paper);
+  }
+  .cover--inside { background-color: var(--kraft-dark); }
+  .label {
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    top: 30%;
+    background: var(--paper);
+    border: 2px solid var(--rose);
+    border-radius: 3px;
+    padding: .7rem 1rem .5rem;
+    transform: rotate(-1.5deg);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .25);
+    color: var(--ink);
+  }
+  .label .row {
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    border-bottom: 1.5px solid var(--margin-line);
+    padding: .15rem 0 .1rem;
+  }
+  .label .k {
+    font-family: var(--type);
+    font-size: .8rem;
+    letter-spacing: .04em;
+    color: var(--rose);
+    flex: none;
+  }
+  .label .v { font-size: 1.9rem; line-height: 1.1; font-weight: 700; }
+  .label .row:first-child .v { font-size: 2.3rem; }
+  .label .row--since .v { font-size: 1.25rem; font-weight: 600; color: var(--rose); }
+  .sticker {
+    position: absolute;
+    right: 12%;
+    bottom: 16%;
+    width: 52px;
+    height: 52px;
+    color: var(--rose);
+    fill: currentColor;
+    stroke: var(--paper);
+    stroke-width: 1.5;
+    transform: rotate(12deg);
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .25));
+  }
+  .cover-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 6%;
+    margin: 0;
+    text-align: center;
+    font-size: 1.3rem;
+    color: rgba(251, 247, 238, .85);
+    animation: nudge 2.4s ease-in-out infinite;
+  }
+  @keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+  /* ---- La tapa que se cierra al final ---- */
+  .lid-wrap {
+    position: absolute;
+    inset: 0;
+    perspective: 1900px;
+    z-index: 40;
+    pointer-events: none;
+  }
+  .lid {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 0;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    pointer-events: auto;
+    transition: transform 1.6s cubic-bezier(.45, .05, .2, 1), opacity .25s ease 0s;
+  }
+  .lid.is-open {
+    transform: rotateX(180deg);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 1.6s cubic-bezier(.45, .05, .2, 1), opacity .3s ease 1.15s;
+  }
+  .lid-wrap.no-anim .lid { transition: none !important; }
+  .stamp {
+    position: absolute;
+    left: 9%;
+    bottom: 19%;
+    padding: .4rem .8rem .3rem;
+    border: 3px solid var(--rose);
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 2px var(--kraft), inset 0 0 0 3.5px var(--rose);
+    color: var(--rose);
+    font-family: var(--type);
+    font-size: 1.35rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.25;
+    transform: rotate(-9deg);
+    mix-blend-mode: multiply;
+    opacity: 0;
+  }
+  .stamp small { display: block; font-size: .68rem; letter-spacing: .06em; text-transform: none; }
+  .lid.is-stamped .stamp { animation: thump .55s cubic-bezier(.2, .9, .3, 1.3) both; }
+  .lid-wrap.no-anim .stamp { animation: none !important; opacity: .92; }
+  @keyframes thump {
+    from { opacity: 0; transform: rotate(-9deg) scale(2.4); }
+    to { opacity: .92; transform: rotate(-9deg) scale(1); }
+  }
+
+  /* ---- La pregunta ---- */
+  .ask { display: flex; flex-direction: column; align-items: flex-start; gap: .2rem; }
+  .ask .question { font-size: 2.3rem; line-height: 1.15; font-weight: 700; margin-top: .2rem; }
+  .answers {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .5rem;
+    margin-top: calc(var(--rule) * .6);
+    padding-left: .6rem;
+    align-self: center;
+  }
+  .si-wrap { position: relative; display: inline-block; }
+  .btn-si {
+    font-family: var(--hand);
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--rose);
+    background: transparent;
+    border: 3px solid var(--rose);
+    border-radius: 48% 52% 50% 50% / 60% 55% 45% 40%;
+    padding: .55rem 2.3rem .65rem;
+    cursor: pointer;
+    transform: rotate(-2deg);
+    transition: transform .15s ease, background-color .6s ease;
+  }
+  .btn-si:hover { background: rgba(201, 64, 95, .08); transform: rotate(-2deg) scale(1.03); }
+  .btn-si:active { transform: rotate(-2deg) scale(.97); }
+  .btn-si:disabled { cursor: default; }
+  /* el círculo que se dibuja a mano alrededor del sí */
+  .ring-si {
+    position: absolute;
+    inset: -16px -24px;
+    color: var(--rose);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .ring-si path { stroke-dasharray: 100; stroke-dashoffset: 100; }
+  .si-wrap.is-chosen .ring-si path { animation: inkdraw 1.2s ease-out forwards; }
+  @keyframes inkdraw { to { stroke-dashoffset: 0; } }
+  .si-wrap.is-chosen .btn-si { background: rgba(201, 64, 95, .14); }
+  .answers .btn-pensar, .answers .arrow, .answers .arrow-note { transition: opacity .7s ease; }
+  .answers.is-chosen .btn-pensar, .answers.is-chosen .arrow, .answers.is-chosen .arrow-note { opacity: 0; pointer-events: none; }
+  .note-si {
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--pencil);
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    margin-top: .5rem !important;
+  }
+  .note-si.is-in { opacity: 1; }
+  .arrow {
+    position: absolute;
+    left: -4.2rem;
+    top: -.6rem;
+    width: 64px;
+    height: 40px;
+    color: var(--pencil);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transform: scaleX(1) rotate(-10deg);
+  }
+  .arrow-note {
+    position: absolute;
+    left: -5.2rem;
+    top: -2rem;
+    font-size: 1.1rem;
+    color: var(--pencil);
+    transform: rotate(-8deg);
+    white-space: nowrap;
+  }
+  .btn-pensar {
+    font-family: var(--hand);
+    font-size: 1.2rem;
+    color: var(--pencil);
+    background: none;
+    border: 0;
+    padding: .3rem .6rem;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: .2em;
+    text-decoration-color: rgba(123, 116, 104, .5);
+  }
+  .wait-msg {
+    font-size: 1.25rem;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--pencil);
+    margin-top: .4rem !important;
+  }
+
+  /* ---- La última hoja ---- */
+  .date { font-size: 1.45rem; font-weight: 400; color: var(--pencil); }
+  .since { font-size: 1.25rem; font-weight: 400; color: var(--pencil); }
+  .counter { color: var(--rose); font-weight: 700; font-size: 1.55rem; line-height: 1.25; margin-bottom: .35rem; }
+  .reveal { opacity: 0; transform: translateY(6px); transition: opacity 1s ease, transform 1s ease; }
+  .reveal.is-in { opacity: 1; transform: none; }
+  .doodle.reveal.is-in { transform: rotate(-8deg); }
+  #dijo .ch { display: inline-block; opacity: 0; }
+  #dijo.is-in .ch { animation: ink .34s ease-out forwards; animation-delay: var(--d); }
+  @keyframes ink {
+    from { opacity: 0; transform: translateY(6px) rotate(-5deg) scale(.85); }
+    to { opacity: 1; transform: none; }
+  }
+  .sheet.no-anim .reveal { transition: none !important; opacity: 1; transform: none; }
+  .sheet.no-anim #dijo .ch { animation: none !important; opacity: 1; }
+  .again {
+    position: absolute;
+    left: 1rem;
+    bottom: .6rem;
+    font-family: var(--hand);
+    font-size: 1rem;
+    color: var(--pencil);
+    background: none;
+    border: 0;
+    padding: .2rem .4rem;
+    cursor: pointer;
+    opacity: .7;
+    text-decoration: underline;
+    text-underline-offset: .2em;
+  }
+  .again:hover { opacity: 1; }
+
+  /* ---- Navegación bajo el cuaderno ---- */
+  .nav {
+    position: relative;
+    width: var(--w);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    min-height: 2.4rem;
+  }
+  .navbtn {
+    font-family: var(--hand);
+    font-size: 1.35rem;
+    color: rgba(251, 247, 238, .72);
+    background: none;
+    border: 0;
+    padding: .3rem .5rem;
+    cursor: pointer;
+    transition: color .2s ease, visibility 0s;
+  }
+  .navbtn:hover { color: var(--paper); }
+  .navbtn.is-off { visibility: hidden; }
+  .nav .hint {
+    font-size: 1.05rem;
+    color: rgba(251, 247, 238, .45);
+    text-align: center;
+  }
+  .nav .skipbtn {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.05rem;
+    color: rgba(251, 247, 238, .4);
+  }
+  .nav.is-seq .skipbtn { display: inline-block; visibility: visible; }
+
+  button:focus-visible {
+    outline: 2px solid var(--rose);
+    outline-offset: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .reveal, #dijo .ch, .stamp { opacity: 1 !important; transform: none !important; }
+    .stamp { opacity: .92 !important; }
+    .ring-si path { stroke-dashoffset: 0; }
+  }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M12 20.5s-7.2-4.6-9.4-9C.7 7.8 3.2 3.5 7 3.5c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.8 0 6.3 4.3 4.4 8-2.2 4.4-9.4 9-9.4 9z"/></symbol>
+    <symbol id="star" viewBox="0 0 24 24"><path d="M12 2.8l2.8 6 6.5.7-4.9 4.4 1.4 6.4L12 17l-5.8 3.3 1.4-6.4L2.7 9.5l6.5-.7z"/></symbol>
+    <symbol id="flower" viewBox="0 0 48 48"><circle cx="24" cy="24" r="5"/><circle cx="24" cy="11" r="6.5"/><circle cx="36.4" cy="20" r="6.5"/><circle cx="31.6" cy="34.5" r="6.5"/><circle cx="16.4" cy="34.5" r="6.5"/><circle cx="11.6" cy="20" r="6.5"/><path d="M24 29v17"/><path d="M24 42c-3-4-7-5-10-4 2 4 6 5 10 4z"/></symbol>
+    <symbol id="tv" viewBox="0 0 48 48"><rect x="5" y="14" width="38" height="26" rx="5"/><path d="M17 14l-6-8M31 14l6-8"/><path d="M24 33s-5.5-3.3-6.6-6.3c-.8-2.2.5-4.7 2.8-4.7 1.5 0 2.6.8 3.8 2.2 1.2-1.4 2.3-2.2 3.8-2.2 2.3 0 3.6 2.5 2.8 4.7C29.5 29.7 24 33 24 33z"/></symbol>
+    <symbol id="check" viewBox="0 0 28 28"><rect x="3" y="3" width="21" height="21" rx="4" transform="rotate(-2 14 14)"/><path d="M8 14.5l4.5 4.5L21 9" style="stroke: var(--rose)"/></symbol>
+    <symbol id="arrow" viewBox="0 0 64 40"><path d="M3 8c14 18 34 24 56 20"/><path d="M50 20l9 8-11 5"/></symbol>
+    <symbol id="hearts" viewBox="0 0 64 40"><use href="#heart" x="2" y="12" width="22" height="22"/><use href="#heart" x="24" y="2" width="26" height="26" transform="rotate(10 37 15)"/><use href="#heart" x="46" y="18" width="16" height="16"/></symbol>
+  </defs>
+</svg>
+
+<div id="glow" aria-hidden="true"></div>
+<div id="dim" aria-hidden="true"></div>
+<canvas id="petals" aria-hidden="true"></canvas>
+
+<div class="stage" lang="es">
+  <div class="notebook" id="notebook">
+    <div class="stack" id="stack">
+
+      <section class="sheet" aria-label="Portada">
+        <div class="face front cover">
+          <div class="label">
+            <div class="row"><span class="k">Para:</span><span class="v">Melania</span></div>
+            <div class="row"><span class="k">Materia:</span><span class="v">Nosotros</span></div>
+          </div>
+          <svg class="sticker" aria-hidden="true"><use href="#heart"/></svg>
+          <p class="cover-hint">toca para abrir</p>
+        </div>
+        <div class="face back cover cover--inside"></div>
+      </section>
+
+      <section class="sheet">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <span class="corner">Fecha: hace muchos años</span>
+          <div class="body">
+            <p>Hace muchos años, en el cole, conocí a <em>una niña</em>.</p>
+          </div>
+          <svg class="doodle" aria-hidden="true"><use href="#star"/></svg>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+      <section class="sheet">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <div class="body">
+            <p>Yo no lo sabía todavía,</p>
+            <p class="tight">pero ese día empezó <em>lo más importante</em> que me ha pasado.</p>
+          </div>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+      <section class="sheet">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <div class="body">
+            <p>Desde entonces, solo ha habido una mujer especial en mi vida.</p>
+            <p class="big rose">Siempre has sido tú.</p>
+          </div>
+          <svg class="doodle doodle--rose" aria-hidden="true"><use href="#heart"/></svg>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+      <section class="sheet">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <div class="body">
+            <p>Todos los momentos contigo son especiales.</p>
+            <p class="tight">Los grandes y los chiquitos.</p>
+            <p class="tight">No hay uno que sobre.</p>
+          </div>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+      <section class="sheet">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <div class="body">
+            <p>Y en los días normales, cuando estoy en mis cosas, ahí estás también:</p>
+            <p class="tight">mientras trabajo,</p>
+            <p class="tight">mientras camino,</p>
+            <p class="tight">mientras no pasa nada.</p>
+          </div>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+      <section class="sheet">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <div class="body">
+            <p class="big">Eres lo bonito que llevo conmigo a todas partes.</p>
+          </div>
+          <svg class="doodle doodle--rose doodle--wide" aria-hidden="true"><use href="#hearts"/></svg>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+      <section class="sheet">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <div class="body">
+            <p>Lo que más me gusta de ti:</p>
+            <ul class="tight">
+              <li><svg class="check" aria-hidden="true"><use href="#check"/></svg><span>lo buena que eres conmigo</span></li>
+              <li><svg class="check" aria-hidden="true"><use href="#check"/></svg><span>lo linda que eres conmigo</span></li>
+              <li><svg class="check" aria-hidden="true"><use href="#check"/></svg><span>lo buena que eres con el mundo: con la gente, con lo que te importa, con las cosas que nadie ve.</span></li>
+            </ul>
+            <p class="tight note">(yo sí las veo)</p>
+          </div>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+      <section class="sheet">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <div class="body">
+            <p>Sé que te gustan los doramas,</p>
+            <p class="tight">y que la confesión siempre llega en el último capítulo: con música, con lluvia y con todo el mundo llorando.</p>
+          </div>
+          <svg class="doodle" aria-hidden="true"><use href="#tv"/></svg>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+      <section class="sheet">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <div class="body">
+            <p>Esto es más sencillo.</p>
+            <p>Soy yo, aquí delante, con unas <em>flores</em> y una pregunta.</p>
+          </div>
+          <svg class="doodle doodle--rose" aria-hidden="true"><use href="#flower"/></svg>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+      <section class="sheet" id="sheet-pregunta">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <span class="corner">Capítulo final</span>
+          <div class="body ask">
+            <p class="tight">Melania,</p>
+            <p class="question rose tight">¿quieres ser mi novia?</p>
+            <div class="answers" id="answers">
+              <span class="arrow-note" aria-hidden="true">toca aquí</span>
+              <svg class="arrow" aria-hidden="true"><use href="#arrow"/></svg>
+              <span class="si-wrap" id="si-wrap">
+                <svg class="ring-si" viewBox="0 0 160 90" preserveAspectRatio="none" aria-hidden="true"><path pathLength="100" d="M22 46C14 8 146 4 148 44 150 84 26 90 16 52 8 20 118 6 144 34"/></svg>
+                <button type="button" id="si" class="btn-si">Sí</button>
+              </span>
+              <button type="button" id="pensar" class="btn-pensar">necesito pensarlo</button>
+            </div>
+            <p id="lluvia-note" class="note-si tight" aria-live="polite">bueno, un poquito de lluvia sí.</p>
+            <p id="pensar-msg" class="wait-msg tight" hidden>Está bien. Tómate el tiempo que necesites. Yo llevo muchos años seguro de esto, así que no me voy a ningún lado.</p>
+          </div>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+      <section class="sheet" id="sheet-final">
+        <div class="face front paper">
+          <span class="holes" aria-hidden="true"></span>
+          <span class="corner">Fin de la primera temporada</span>
+          <div class="body">
+            <p class="big rose tight" id="dijo">Dijiste que sí.</p>
+            <p class="date tight reveal" id="fecha"></p>
+            <p class="since reveal">Novios desde hace</p>
+            <p class="counter tight reveal" id="contador"></p>
+            <p class="tight reveal">Gracias por decir que sí.</p>
+            <p class="tight reveal">Lo que viene lo escribimos juntos.</p>
+          </div>
+          <svg class="doodle doodle--rose doodle--mc reveal" viewBox="0 0 24 24" aria-hidden="true"><use href="#heart"/><text x="12" y="14.4" font-size="6.2" text-anchor="middle">M + C</text></svg>
+          <button type="button" id="otra-vez" class="again">leer de nuevo</button>
+        </div>
+        <div class="face back paper"><span class="holes" aria-hidden="true"></span></div>
+      </section>
+
+    </div>
+
+    <div class="lid-wrap" id="lid-wrap">
+      <div class="lid is-open" id="lid">
+        <div class="face front cover">
+          <div class="label">
+            <div class="row"><span class="k">Para:</span><span class="v">Melania</span></div>
+            <div class="row"><span class="k">Materia:</span><span class="v">Nosotros</span></div>
+            <div class="row row--since"><span class="k">Desde:</span><span class="v" id="lid-fecha"></span></div>
+          </div>
+          <div class="stamp" aria-hidden="true">Novios<small>capítulo final</small></div>
+          <svg class="sticker" aria-hidden="true"><use href="#heart"/></svg>
+          <p class="cover-hint">toca para abrir</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="rings" id="rings" aria-hidden="true"></div>
+  </div>
+
+  <div class="nav">
+    <button type="button" id="prev" class="navbtn is-off">← atrás</button>
+    <span class="hint" id="hint"></span>
+    <button type="button" id="next" class="navbtn">pasar la hoja →</button>
+    <button type="button" id="saltar" class="navbtn skipbtn">saltar →</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---- Espiral y agujeros ---- */
+  var RINGS = 12;
+  function fill(el) {
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < RINGS; i++) frag.appendChild(document.createElement('span'));
+    el.appendChild(frag);
+  }
+  fill(document.getElementById('rings'));
+  [].forEach.call(document.querySelectorAll('.holes'), fill);
+
+  /* ---- Dibujos del flipbook (cuadro a cuadro, con temblor de trazo a mano) ---- */
+  var HEART = 'M12 20.5s-7.2-4.6-9.4-9C.7 7.8 3.2 3.5 7 3.5c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.8 0 6.3 4.3 4.4 8-2.2 4.4-9.4 9-9.4 9z';
+  function R(s) { var x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+  function J(k, i, a) { return (R(k * 131 + i * 7.3) - 0.5) * (a == null ? 1.6 : a); }
+  function n(v) { return Math.round(v * 10) / 10; }
+  function n2(v) { return Math.round(v * 100) / 100; }
+  function ease(t) { t = Math.max(0, Math.min(1, t)); return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+  function wl(k, i, x1, y1, x2, y2, cls) {
+    var mx = (x1 + x2) / 2 + J(k, i, 3), my = (y1 + y2) / 2 + J(k, i + 1, 3);
+    return '<path' + (cls ? ' class="' + cls + '"' : '') + ' d="M' + n(x1 + J(k, i + 2)) + ' ' + n(y1 + J(k, i + 3)) +
+      'Q' + n(mx) + ' ' + n(my) + ' ' + n(x2 + J(k, i + 4)) + ' ' + n(y2 + J(k, i + 5)) + '"/>';
+  }
+  function circ(k, i, cx, cy, r, cls) {
+    return '<circle' + (cls ? ' class="' + cls + '"' : '') + ' cx="' + n(cx + J(k, i)) + '" cy="' + n(cy + J(k, i + 1)) + '" r="' + n(r) + '"/>';
+  }
+  function heart(cx, cy, sc, cls, style) {
+    return '<path class="' + (cls || '') + '"' + (style ? ' style="' + style + '"' : '') + ' vector-effect="non-scaling-stroke" transform="translate(' +
+      n2(cx - 12 * sc) + ' ' + n2(cy - 12 * sc) + ') scale(' + n2(sc) + ')" d="' + HEART + '"/>';
+  }
+  /* o.hand = brazo de adelante, o.hand2 = brazo de atrás (coordenadas absolutas) */
+  function figure(k, b, x, gy, o) {
+    gy += o.dy || 0;
+    var hr = 9, hy = gy - 84, ny = hy + hr, hip = gy - 32, ay = ny + 10, d = o.dir || 1;
+    var sw = o.walk == null ? 6 : Math.sin(o.walk) * 11;
+    var s = circ(k, b, x, hy, hr);
+    s += '<circle class="dot" cx="' + n(x - 3 + d * 1.5) + '" cy="' + n(hy - 1) + '" r="1.1"/>';
+    s += '<circle class="dot" cx="' + n(x + 3 + d * 1.5) + '" cy="' + n(hy - 1) + '" r="1.1"/>';
+    s += '<path d="M' + n(x - 3.5 + d * 1.5) + ' ' + n(hy + 3) + 'q3.5 3.5 7 0"/>';
+    if (o.girl) {
+      s += '<path d="M' + n(x - 8) + ' ' + n(hy - 5) + 'q8 -8 16 0"/>';
+      s += '<path d="M' + n(x - d * 7) + ' ' + n(hy - 4) + 'q' + n(-d * 9) + ' 3 ' + n(-d * 7) + ' 15"/>';
+    }
+    s += wl(k, b + 2, x, ny, x, hip);
+    if (o.girl) {
+      s += '<path d="M' + n(x - 12 + J(k, b + 9)) + ' ' + n(hip + 4) + 'L' + n(x + 12 + J(k, b + 10)) + ' ' + n(hip + 4) + 'L' + n(x) + ' ' + n(hip - 16) + 'Z"/>';
+      hip += 4;
+    }
+    s += wl(k, b + 4, x, hip, x + sw, gy);
+    s += wl(k, b + 6, x, hip, x - sw, gy);
+    if (o.hand) s += wl(k, b + 8, x, ay, o.hand[0], o.hand[1]);
+    else s += wl(k, b + 8, x, ay, x + d * 10 - sw * 0.6, ay + 22);
+    if (o.hand2) s += wl(k, b + 10, x, ay, o.hand2[0], o.hand2[1]);
+    else s += wl(k, b + 10, x, ay, x - d * 10 + sw * 0.6, ay + 22);
+    return s;
+  }
+  function school(k) {
+    var s = '<g class="pencil">';
+    s += wl(k, 50, 60, 150, 60, 105) + wl(k, 52, 60, 105, 140, 105) + wl(k, 54, 140, 105, 140, 150);
+    s += wl(k, 56, 55, 105, 100, 80) + wl(k, 58, 100, 80, 145, 105);
+    s += wl(k, 60, 92, 150, 92, 125) + wl(k, 62, 92, 125, 108, 125) + wl(k, 64, 108, 125, 108, 150);
+    s += '<rect x="66" y="112" width="12" height="10"/><rect x="122" y="112" width="12" height="10"/>';
+    s += wl(k, 66, 100, 80, 100, 62) + '<path d="M100 62l12 4-12 4z"/>';
+    return s + '</g>';
+  }
+  /* un ramo de flores: (x, y) es la mano que lo sostiene */
+  function bouquet(k, x, y, sc, ang) {
+    var s = '<g transform="translate(' + n(x) + ' ' + n(y) + ') rotate(' + n(ang || 0) + ') scale(' + n2(sc) + ')">';
+    s += '<path d="M-8 -6L0 12L8 -6"/>';
+    s += '<path class="thin" d="M0 8L-7 -12M0 8L0 -16M0 8L7 -12"/>';
+    var fl = [[-7, -13], [0, -18], [7, -13]];
+    for (var i = 0; i < 3; i++) {
+      for (var j = 0; j < 5; j++) {
+        var a = (j * 72 + k * 4) * Math.PI / 180;
+        s += '<circle class="rose petal thin" cx="' + n2(fl[i][0] + Math.cos(a) * 3.2) + '" cy="' + n2(fl[i][1] + Math.sin(a) * 3.2) + '" r="2.4"/>';
+      }
+      s += '<circle class="gold thin" cx="' + fl[i][0] + '" cy="' + fl[i][1] + '" r="1.6"/>';
+    }
+    return s + '</g>';
+  }
+
+  function drawMeet(k, F) {
+    var gy = 150, s = school(k) + wl(k, 70, 8, gy, 192, gy);
+    var t = ease(k / 15), walking = k < 16;
+    var bx = 28 + (84 - 28) * t, gx = 172 - (172 - 116) * t, ph = k * 0.8;
+    var hand = walking ? null : [100, gy - 45];
+    s += figure(k, 0, bx, gy, { dir: 1, walk: walking ? ph : null, hand: hand });
+    s += figure(k, 20, gx, gy, { girl: true, dir: -1, walk: walking ? ph + Math.PI : null, hand: hand });
+    if (k >= 16) {
+      var u = (k - 16) / (F - 17), sc = u < 0.6 ? (u / 0.6) * 1.15 : 1.15 - 0.15 * ((u - 0.6) / 0.4);
+      s += heart(100, 44, 1.5 * sc, 'rose rose-fill');
+    }
+    if (k === F - 1) s += '<text class="note" x="100" y="188" text-anchor="middle">(más o menos así)</text>';
+    return s;
+  }
+  function drawHeart(k, F) {
+    if (k <= 10) {
+      var p = (k + 1) / 11;
+      return '<path class="rose" pathLength="100" stroke-dasharray="100" stroke-dashoffset="' + n(100 - p * 100) +
+        '" vector-effect="non-scaling-stroke" transform="translate(40 40) scale(5)" d="' + HEART + '"/>';
+    }
+    var t = (k - 11) / (F - 12);
+    var sc = 5 * (1 + 0.1 * Math.abs(Math.sin(t * Math.PI * 2)));
+    var fo = Math.min(1, (k - 11) / 3) * 0.9;
+    var s = heart(100, 100, sc, 'rose', 'fill:var(--rose);fill-opacity:' + n2(fo));
+    if (k >= 14) s += '<text class="onheart" x="100" y="114" text-anchor="middle" font-size="46">tú</text>';
+    return s;
+  }
+  function leaf(k, x, y, dir, sc) {
+    if (sc <= 0.02) return '';
+    return '<path transform="translate(' + x + ' ' + n(y + J(k, 31)) + ') scale(' + n2(dir * sc) + ' ' + n2(sc) + ')" vector-effect="non-scaling-stroke" d="M0 0c-14-3-22-12-24-24c12 2 20 10 24 24z"/>';
+  }
+  function drawFlower(k, F) {
+    var gy = 172, s = wl(k, 70, 30, gy, 170, gy);
+    var g = ease(Math.min(1, k / 9)), top = gy - 92 * g;
+    s += '<path d="M100 ' + gy + 'Q' + n(93 + J(k, 1)) + ' ' + n(gy - 46 * g) + ' 100 ' + n(top) + '"/>';
+    if (k >= 4) s += leaf(k, 100, gy - 30, 1, ease((k - 4) / 5));
+    if (k >= 6) s += leaf(k, 100, gy - 50, -1, ease((k - 6) / 5));
+    if (k >= 9 && k < 12) s += '<circle class="rose" cx="100" cy="' + n(top) + '" r="' + n(8 * ((k - 8) / 3)) + '"/>';
+    if (k >= 12) {
+      var p = ease((k - 12) / (F - 14));
+      for (var i = 0; i < 5; i++) {
+        var ang = -90 + i * 72 + (1 - p) * 40, rad = ang * Math.PI / 180;
+        var dd = 4 + 11 * p, px = 100 + Math.cos(rad) * dd, py = top + Math.sin(rad) * dd;
+        s += '<ellipse class="rose petal" cx="' + n(px) + '" cy="' + n(py) + '" rx="' + n2(3 + 4 * p) + '" ry="' + n2(5 + 6.5 * p) +
+          '" transform="rotate(' + n(ang + 90) + ' ' + n(px) + ' ' + n(py) + ')"/>';
+      }
+      s += '<circle class="gold" cx="100" cy="' + n(top) + '" r="' + n2(3 + 3 * p) + '"/>';
+    }
+    return s;
+  }
+  /* el final: él llega con las flores, se las da, ella las abraza, se abrazan, saltan, corazón M + C */
+  function drawFinal(k, F) {
+    var gy = 152, ay = gy - 65, s = wl(k, 70, 8, gy, 192, gy);
+    var bx = 76, gx = 130, bo = { dir: 1 }, go_ = { girl: true, dir: -1 }, bq = null, dy = 0, t, u, i;
+    if (k < 10) {
+      t = ease(k / 9); bx = 40 + 36 * t;
+      bo.walk = k < 9 ? k * 0.9 : null;
+      bo.hand2 = [bx - 12, ay + 20];
+      bq = [bx - 13, ay + 22, 1.15, 200];
+    } else if (k < 20) {
+      t = ease((k - 10) / 7);
+      var hx = bx + 10 + (100 - bx - 10) * t, hy = ay + 22 - 26 * t;
+      bo.hand = [hx, hy];
+      bq = [hx, hy - 2, 1.3, 0];
+      if (k >= 14) { u = ease((k - 14) / 5); go_.hand = [gx - 10 - (gx - 10 - 104) * u, ay + 22 - 26 * u]; }
+    } else if (k < 30) {
+      dy = -4 * Math.abs(Math.sin((k - 20) / 9 * Math.PI * 2)); go_.dy = dy;
+      go_.hand = [gx - 9, ay + 14 + dy]; go_.hand2 = [gx - 3, ay + 18 + dy];
+      bq = [gx - 7, ay + 15 + dy, 1.2, -14];
+      bo.hand = [bx + 12, ay + 20];
+      for (i = 0; i < 3; i++) {
+        var hy2 = gy - 96 - ((k - 20) * 4 + i * 11) % 30, hx2 = gx + 12 + i * 8 + Math.sin(k * 0.6 + i) * 3;
+        s += heart(hx2, hy2, 0.45 + i * 0.1, i % 2 ? 'rose rose-fill' : 'rose');
+      }
+    } else if (k < 44) {
+      t = ease((k - 30) / 8); bx = 76 + 16 * t; gx = 130 - 22 * t;
+      var L = function (a, b) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; };
+      bo.hand = L([bx + 10, ay + 22], [gx - 2, ay + 4]); bo.hand2 = L([bx - 10, ay + 22], [gx + 3, ay + 13]);
+      go_.hand = L([gx - 9, ay + 14], [bx + 2, ay + 3]); go_.hand2 = L([gx - 3, ay + 18], [gx + 11, ay + 22]);
+      bq = L([gx - 7, ay + 15], [gx + 11, ay + 24]); bq = [bq[0], bq[1], 1.15, -14 + 179 * t];
+      if (k >= 36) {
+        for (i = 0; i < 4; i++) {
+          var yy = 105 - ((k - 36) * 6 + i * 17) % 70, xx = [30, 58, 142, 170][i] + Math.sin(k * 0.5 + i) * 5;
+          s += heart(xx, yy, 0.5 + (i % 3) * 0.15, i % 2 ? 'rose rose-fill' : 'rose');
+        }
+      }
+    } else if (k < 54) {
+      u = (k - 44) / 9; dy = -18 * Math.abs(Math.sin(u * Math.PI * 2)); bx = 88; gx = 112;
+      bo.dy = dy; go_.dy = dy;
+      bo.hand = [100, gy - 48 + dy]; go_.hand = [100, gy - 48 + dy];
+      bo.hand2 = [bx - 15, ay + 2 + dy]; go_.hand2 = [gx + 15, ay + 2 + dy];
+      bq = [gx + 15, ay + dy, 1.15, 15];
+      for (i = 0; i < 6; i++) {
+        var y = 130 - ((k * 7 + i * 19) % 115), x = 22 + i * 31 + Math.sin(k * 0.5 + i) * 6;
+        s += heart(x, y, 0.55 + (i % 3) * 0.2, i % 2 ? 'rose rose-fill' : 'rose');
+      }
+    } else {
+      bx = 88; gx = 112;
+      bo.hand = [100, gy - 48]; go_.hand = [100, gy - 48];
+      go_.hand2 = [gx + 12, ay + 20];
+      bq = [gx + 12, ay + 22, 1.15, 165];
+      u = (k - 54) / (F - 55);
+      var sc = 1.9 * (u < 0.7 ? ease(u / 0.7) * 1.1 : 1.1 - 0.1 * ((u - 0.7) / 0.3));
+      s += heart(100, 30, sc, 'rose', 'fill:var(--rose);fill-opacity:.9');
+      if (u > 0.45) s += '<text class="onheart" x="100" y="35" text-anchor="middle" font-size="16">M + C</text>';
+      for (i = 0; i < 4; i++) {
+        var y2 = 135 - ((k * 5 + i * 27) % 100), x2 = 20 + i * 52 + Math.sin(k * 0.4 + i) * 6;
+        s += heart(x2, y2, 0.5, i % 2 ? 'rose rose-fill' : 'rose');
+      }
+    }
+    s += figure(k, 0, bx, gy, bo);
+    s += figure(k, 20, gx, gy, go_);
+    if (bq) s += bouquet(k, bq[0], bq[1], bq[2], bq[3]);
+    return s;
+  }
+
+  /* después de qué hoja (índice original) va cada flipbook */
+  var SEQS = [
+    { after: 1, frames: 24, draw: drawMeet },
+    { after: 3, frames: 18, draw: drawHeart },
+    { after: 9, frames: 22, draw: drawFlower },
+    { after: 10, frames: 60, draw: drawFinal, auto: true, ms: 112 }
+  ];
+  var FINAL = SEQS[SEQS.length - 1];
+
+  /* ---- Hojas ---- */
+  var stack = document.getElementById('stack');
+  var notebook = document.getElementById('notebook');
+  var nav = document.querySelector('.nav');
+  var sheets = [].slice.call(stack.querySelectorAll('.sheet'));
+  var prevBtn = document.getElementById('prev');
+  var nextBtn = document.getElementById('next');
+  var skipBtn = document.getElementById('saltar');
+  var hint = document.getElementById('hint');
+  var idx = 0, busy = false, timer = null;
+  var N, qIndex, finalIndex;
+
+  var qOriginal = sheets.indexOf(document.getElementById('sheet-pregunta'));
+  sheets.forEach(function (s, i) {
+    if (i > 0 && i <= qOriginal) {
+      var p = document.createElement('span');
+      p.className = 'pnum';
+      p.textContent = i;
+      s.querySelector('.front').appendChild(p);
+    }
+  });
+
+  SEQS.forEach(function (sq, si) {
+    var anchor = sheets[sq.after], ref = anchor.nextSibling;
+    for (var k = 0; k < sq.frames; k++) {
+      var s = document.createElement('section');
+      s.className = 'sheet sheet--frame';
+      s.setAttribute('aria-hidden', 'true');
+      s.dataset.seq = si;
+      s.innerHTML =
+        '<div class="face front paper"><span class="holes"></span>' +
+        '<div class="frame-art"><svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">' + sq.draw(k, sq.frames) + '</svg></div>' +
+        '<span class="fnum">' + (k + 1) + '</span>' +
+        (k === sq.frames - 1 && !sq.auto ? '<button type="button" class="replay">ver otra vez</button>' : '') +
+        '</div><div class="face back paper"><span class="holes"></span></div>';
+      stack.insertBefore(s, ref);
+    }
+  });
+  [].forEach.call(stack.querySelectorAll('.sheet--frame .holes'), fill);
+
+  sheets = [].slice.call(stack.querySelectorAll('.sheet'));
+  N = sheets.length;
+  qIndex = sheets.indexOf(document.getElementById('sheet-pregunta'));
+  finalIndex = sheets.indexOf(document.getElementById('sheet-final'));
+  SEQS.forEach(function (sq, si) {
+    var frames = sheets.filter(function (s) { return s.dataset.seq === String(si); });
+    sq.start = sheets.indexOf(frames[0]);
+    sq.end = sheets.indexOf(frames[frames.length - 1]);
+  });
+  function seqOf(i) { var s = sheets[i]; return s && s.dataset.seq != null ? SEQS[+s.dataset.seq] : null; }
+
+  function render() {
+    sheets.forEach(function (s, i) {
+      var turned = i < idx;
+      s.classList.toggle('is-turned', turned);
+      s.classList.toggle('is-current', i === idx);
+      s.style.zIndex = turned ? (N + 1 + i) : (N - i);
+    });
+    prevBtn.classList.toggle('is-off', idx === 0 || idx > qIndex);
+    nextBtn.classList.toggle('is-off', idx >= qIndex);
+    nav.classList.toggle('is-busy', busy);
+    hint.textContent = idx === 1 ? 'toca la hoja o desliza' : '';
+  }
+
+  function go(n, animate) {
+    n = Math.max(0, Math.min(N - 1, n));
+    if (n === idx) return;
+    if (animate === false) stack.classList.add('no-anim');
+    idx = n;
+    render();
+    if (animate === false) { void stack.offsetWidth; stack.classList.remove('no-anim'); }
+  }
+
+  /* pasar las hojas del flipbook rapidísimo */
+  function riffle(sq) {
+    busy = true; render();
+    stack.classList.add('is-flicking');
+    timer = setInterval(function () {
+      if (idx >= sq.end) { finish(sq); return; }
+      go(idx + 1);
+    }, sq.ms || 105);
+  }
+  function finish(sq) {
+    clearInterval(timer); timer = null;
+    setTimeout(function () {
+      stack.classList.remove('is-flicking');
+      busy = false;
+      if (sq.auto) {
+        go(sq.end + 1);
+        if (sq === FINAL) arriveFinal(true);
+      } else render();
+    }, sq.auto ? 700 : 180);
+  }
+  function play(sq) {
+    busy = true; render();
+    go(sq.start);
+    setTimeout(function () { riffle(sq); }, 800);
+  }
+  function skip() {
+    var sq = seqOf(idx);
+    if (!timer || !sq) return;
+    clearInterval(timer);
+    go(sq.end);
+    finish(sq);
+  }
+
+  function nextPage() {
+    if (busy) { skip(); return; }
+    if (idx >= qIndex) return;
+    var sq = seqOf(idx + 1);
+    if (sq && idx + 1 === sq.start) { play(sq); return; }
+    go(idx + 1);
+  }
+  function prevPage() {
+    if (busy || idx === 0 || idx > qIndex) return;
+    var here = seqOf(idx);
+    if (here) { go(here.start - 1); return; }
+    var back = seqOf(idx - 1);
+    go(back ? back.end : idx - 1);
+  }
+
+  stack.addEventListener('click', function (e) {
+    var b = e.target.closest('.replay');
+    if (!b || busy) return;
+    var sq = seqOf(idx);
+    if (!sq) return;
+    go(sq.start, false);
+    busy = true; render();
+    setTimeout(function () { riffle(sq); }, 350);
+  });
+
+  nextBtn.addEventListener('click', nextPage);
+  prevBtn.addEventListener('click', prevPage);
+  notebook.addEventListener('click', function (e) {
+    if (lidClosed) { openLid(); return; }
+    if (e.target.closest('button, a')) return;
+    nextPage();
+  });
+
+  var touch = null;
+  notebook.addEventListener('touchstart', function (e) {
+    var t = e.changedTouches[0];
+    touch = { x: t.clientX, y: t.clientY };
+  }, { passive: true });
+  notebook.addEventListener('touchend', function (e) {
+    if (!touch) return;
+    var t = e.changedTouches[0];
+    var dx = t.clientX - touch.x, dy = t.clientY - touch.y;
+    touch = null;
+    if (lidClosed) return;
+    if (Math.abs(dx) < 40 && Math.abs(dy) < 40) return;
+    if (Math.abs(dx) > Math.abs(dy)) { dx < 0 ? nextPage() : prevPage(); }
+    else { dy < 0 ? nextPage() : prevPage(); }
+  }, { passive: true });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target.closest && e.target.closest('button, input, textarea')) return;
+    if (lidClosed) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLid(); } return; }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); nextPage(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'Backspace') { e.preventDefault(); prevPage(); }
+  });
+
+  /* ---- Pétalos, lluvia y chispas ---- */
+  var canvas = document.getElementById('petals');
+  var ctx = canvas.getContext('2d');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var COLORS = ['#F2A7BB', '#E98FA9', '#D9718F', '#F6C1CF', '#E7B4C4'];
+  var W = 0, H = 0, ambient = [], burst = [], rain = [], last = 0, raf = 0;
+  var baseWant = 12, ambientTarget = null, rainAlpha = 0, rainTarget = 0;
+
+  function petal(x, y) {
+    return {
+      x: x, y: y,
+      s: 5 + Math.random() * 6,
+      a: Math.random() * Math.PI * 2,
+      va: (Math.random() - 0.5) * 1.8,
+      vx: 0, vy: 0,
+      phase: Math.random() * Math.PI * 2,
+      sway: 12 + Math.random() * 18,
+      fall: 16 + Math.random() * 20,
+      alpha: 0.35 + Math.random() * 0.35,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)]
+    };
+  }
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    baseWant = Math.max(8, Math.min(22, Math.round(W * H / 50000)));
+    while (ambient.length < baseWant) ambient.push(petal(Math.random() * W, Math.random() * H));
+    rain.length = 0;
+    frame(0);
+  }
+  function draw(p) {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.a);
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.moveTo(0, -p.s);
+    ctx.bezierCurveTo(p.s * 0.95, -p.s * 0.55, p.s * 0.85, p.s * 0.75, 0, p.s);
+    ctx.bezierCurveTo(-p.s * 0.85, p.s * 0.75, -p.s * 0.95, -p.s * 0.55, 0, -p.s);
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawRain(dt) {
+    while (rain.length < 190) rain.push({ x: Math.random() * (W + 80) - 40, y: Math.random() * H, len: 12 + Math.random() * 20, sp: 850 + Math.random() * 750, w: 0.7 + Math.random() * 1.1 });
+    ctx.save();
+    ctx.strokeStyle = 'rgba(214, 224, 242, ' + n2(0.55 * rainAlpha) + ')';
+    ctx.lineCap = 'round';
+    for (var i = 0; i < rain.length; i++) {
+      var d = rain[i];
+      ctx.lineWidth = d.w;
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x - d.len * 0.12, d.y + d.len);
+      ctx.stroke();
+      d.y += d.sp * dt;
+      d.x -= d.sp * 0.12 * dt;
+      if (d.y > H) { d.y = -d.len - Math.random() * 80; d.x = Math.random() * (W + 80) - 20; }
+    }
+    ctx.restore();
+  }
+  function frame(t) {
+    var dt = Math.min((t - last) / 1000, 0.05) || 0;
+    last = t;
+    ctx.clearRect(0, 0, W, H);
+    var i, p;
+    var want = ambientTarget == null ? baseWant : ambientTarget;
+    if (ambient.length < want) ambient.push(petal(Math.random() * W, -20));
+    for (i = 0; i < ambient.length; i++) {
+      p = ambient[i];
+      p.phase += dt * 0.9;
+      p.x += Math.sin(p.phase) * p.sway * dt;
+      p.y += p.fall * dt;
+      p.a += p.va * dt;
+      if (p.y > H + 20) {
+        if (ambient.length > want) { ambient.splice(i, 1); i--; continue; }
+        p.y = -20; p.x = Math.random() * W;
+      }
+      if (p.x < -30) p.x = W + 20; else if (p.x > W + 30) p.x = -20;
+      draw(p);
+    }
+    for (i = burst.length - 1; i >= 0; i--) {
+      p = burst[i];
+      if (p.spark) {
+        p.vx *= Math.pow(0.2, dt);
+        p.vy = p.vy * Math.pow(0.3, dt) + 240 * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.life -= p.decay * dt;
+        if (p.life <= 0) { burst.splice(i, 1); continue; }
+        ctx.globalAlpha = Math.min(1, p.life);
+        ctx.fillStyle = '#FFD98A';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#FFF6DA';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.s * 0.45, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        continue;
+      }
+      p.vx *= Math.pow(0.3, dt);
+      p.vy = p.vy * Math.pow(0.45, dt) + 420 * dt;
+      p.phase += dt * 1.4;
+      p.x += (p.vx + Math.sin(p.phase) * p.sway) * dt;
+      p.y += (p.vy + p.fall) * dt;
+      p.a += p.va * dt;
+      if (p.y > H + 30) { burst.splice(i, 1); continue; }
+      draw(p);
+    }
+    rainAlpha += (rainTarget - rainAlpha) * Math.min(1, dt * 1.6);
+    if (rainAlpha > 0.01) drawRain(dt); else if (rain.length) rain.length = 0;
+  }
+  function loop(t) { frame(t); raf = requestAnimationFrame(loop); }
+  function start() { if (raf || reduce) return; last = performance.now(); raf = requestAnimationFrame(loop); }
+  function stop() { cancelAnimationFrame(raf); raf = 0; }
+  function spawnBurst(x, y, count) {
+    if (reduce) return;
+    var i, p, ang, sp;
+    for (i = 0; i < count; i++) {
+      p = petal(x, y);
+      ang = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.6;
+      sp = 260 + Math.random() * 760;
+      p.vx = Math.cos(ang) * sp;
+      p.vy = Math.sin(ang) * sp;
+      p.va = (Math.random() - 0.5) * 8;
+      p.alpha = 0.6 + Math.random() * 0.4;
+      p.s = 6 + Math.random() * 9;
+      burst.push(p);
+    }
+    for (i = 0; i < count / 4; i++) {
+      ang = Math.random() * Math.PI * 2;
+      sp = 120 + Math.random() * 520;
+      burst.push({ spark: true, x: x, y: y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 120, s: 1.4 + Math.random() * 2.4, life: 1, decay: 0.45 + Math.random() * 0.5 });
+    }
+  }
+  window.addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else start(); });
+  resize();
+  start();
+
+  /* ---- La respuesta ---- */
+  var si = document.getElementById('si');
+  var siWrap = document.getElementById('si-wrap');
+  var answers = document.getElementById('answers');
+  var lluviaNote = document.getElementById('lluvia-note');
+  var pensar = document.getElementById('pensar');
+  var pensarMsg = document.getElementById('pensar-msg');
+  var otraVez = document.getElementById('otra-vez');
+  var fecha = document.getElementById('fecha');
+  var lidFecha = document.getElementById('lid-fecha');
+  var contador = document.getElementById('contador');
+  var dijo = document.getElementById('dijo');
+  var finalSheet = document.getElementById('sheet-final');
+  var reveals = [].slice.call(finalSheet.querySelectorAll('.reveal'));
+  var lidWrap = document.getElementById('lid-wrap');
+  var lid = document.getElementById('lid');
+  var KEY = 'melania-dijo-si';
+  var since = null, tick = null, lidClosed = false, inSeq = false, seqTimers = [];
+
+  /* "Dijo que sí." letra por letra */
+  (function () {
+    var t = dijo.textContent, h = '';
+    for (var i = 0; i < t.length; i++) {
+      h += '<span class="ch" style="--d:' + (i * 95) + 'ms">' + (t[i] === ' ' ? '&nbsp;' : t[i]) + '</span>';
+    }
+    dijo.innerHTML = h;
+  })();
+
+  function at(ms, fn) { seqTimers.push(setTimeout(fn, ms)); }
+  function cancelSeq() { seqTimers.forEach(clearTimeout); seqTimers = []; }
+  function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+  function formatDate(d) {
+    try { return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
+    catch (e) { return d.toDateString(); }
+  }
+  function pl(v, s, p) { return v + ' ' + (v === 1 ? s : p); }
+  function updateCounter() {
+    if (!since) return;
+    var sec = Math.max(0, Math.floor((Date.now() - since.getTime()) / 1000));
+    var d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+    var parts = [];
+    if (d) parts.push(pl(d, 'día', 'días'));
+    if (d || h) parts.push(pl(h, 'hora', 'horas'));
+    parts.push(pl(m, 'minuto', 'minutos'));
+    contador.textContent = parts.join(', ') + ' y ' + pl(s, 'segundo', 'segundos');
+  }
+  function startCounter(d) {
+    since = d;
+    fecha.textContent = formatDate(d);
+    lidFecha.textContent = formatDate(d);
+    clearInterval(tick);
+    updateCounter();
+    tick = setInterval(updateCounter, 1000);
+  }
+
+  function closeLid() {
+    lidClosed = true;
+    lid.classList.remove('is-open');
+    hint.textContent = '';
+    at(1500, function () { lid.classList.add('is-stamped'); buzz(60); });
+  }
+  function openLid() {
+    lidClosed = false;
+    cancelSeq();
+    lid.classList.add('is-open');
+  }
+
+  /* la última hoja: se va escribiendo sola */
+  function arriveFinal(animate) {
+    inSeq = false; busy = false;
+    nav.classList.remove('is-seq');
+    render();
+    if (!animate) finalSheet.classList.add('no-anim');
+    dijo.classList.add('is-in');
+    reveals.forEach(function (el, i) {
+      if (animate) at(1500 + i * 800, function () { el.classList.add('is-in'); });
+      else el.classList.add('is-in');
+    });
+    if (animate) { buzz([30, 50, 30]); at(12500, closeLid); }
+  }
+
+  /* toda la secuencia después de tocar "Sí" */
+  function sayYes() {
+    var when = new Date();
+    try { localStorage.setItem(KEY, when.toISOString()); } catch (e) {}
+    startCounter(when);
+    si.disabled = true;
+    pensarMsg.hidden = true;
+    inSeq = true; busy = true;
+    nav.classList.add('is-seq');
+    render();
+    buzz(30);
+    siWrap.classList.add('is-chosen');
+    answers.classList.add('is-chosen');
+    notebook.classList.add('is-happy');
+    at(1400, function () { lluviaNote.classList.add('is-in'); });
+    at(2400, function () { document.body.classList.add('is-rain'); rainTarget = 1; });
+    at(6600, function () {
+      rainTarget = 0;
+      document.body.classList.remove('is-rain');
+      document.body.classList.add('is-yes');
+      buzz([50, 70, 50, 70, 140]);
+    });
+    at(7000, function () {
+      var r = si.getBoundingClientRect();
+      spawnBurst(r.left + r.width / 2, r.top + r.height / 2, 230);
+      ambientTarget = 70;
+    });
+    at(7650, function () { var r = notebook.getBoundingClientRect(); spawnBurst(r.left + r.width * 0.15, r.top + r.height * 0.2, 170); });
+    at(8300, function () { var r = notebook.getBoundingClientRect(); spawnBurst(r.right - r.width * 0.15, r.top + r.height * 0.2, 170); });
+    at(7900, function () { play(FINAL); });
+    at(40000, function () { ambientTarget = 40; });
+  }
+  function skipAll() {
+    if (!inSeq) return;
+    cancelSeq();
+    if (timer) { clearInterval(timer); timer = null; }
+    stack.classList.remove('is-flicking');
+    rainTarget = 0;
+    document.body.classList.remove('is-rain');
+    document.body.classList.add('is-yes');
+    ambientTarget = 50;
+    lluviaNote.classList.add('is-in');
+    go(finalIndex);
+    arriveFinal(true);
+  }
+
+  si.addEventListener('click', function () { if (!inSeq && !si.disabled) sayYes(); });
+  skipBtn.addEventListener('click', skipAll);
+
+  pensar.addEventListener('click', function () {
+    pensarMsg.hidden = false;
+    pensar.hidden = true;
+  });
+
+  otraVez.addEventListener('click', function () {
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    cancelSeq();
+    clearInterval(tick); since = null;
+    si.disabled = false;
+    siWrap.classList.remove('is-chosen');
+    answers.classList.remove('is-chosen');
+    notebook.classList.remove('is-happy');
+    lluviaNote.classList.remove('is-in');
+    pensarMsg.hidden = true;
+    pensar.hidden = false;
+    document.body.classList.remove('is-yes', 'is-rain');
+    rainTarget = 0; ambientTarget = null;
+    finalSheet.classList.remove('no-anim');
+    dijo.classList.remove('is-in');
+    reveals.forEach(function (el) { el.classList.remove('is-in'); });
+    lid.classList.remove('is-stamped');
+    lidWrap.classList.add('no-anim');
+    lid.classList.add('is-open'); lidClosed = false;
+    void lidWrap.offsetWidth; lidWrap.classList.remove('no-anim');
+    go(0, false);
+  });
+
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  if (saved) {
+    var d = new Date(saved);
+    startCounter(isNaN(d.getTime()) ? new Date() : d);
+    si.disabled = true;
+    siWrap.classList.add('is-chosen');
+    answers.classList.add('is-chosen');
+    lluviaNote.classList.add('is-in');
+    document.body.classList.add('is-yes');
+    ambientTarget = 40;
+    go(finalIndex, false);
+    arriveFinal(false);
+    lidWrap.classList.add('no-anim');
+    cancelSeq();
+    lidClosed = true;
+    lid.classList.remove('is-open');
+    lid.classList.add('is-stamped');
+    void lidWrap.offsetWidth;
+    lidWrap.classList.remove('no-anim');
+    hint.textContent = '';
+  } else {
+    render();
+  }
+})();
+</script>
